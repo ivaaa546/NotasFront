@@ -43,7 +43,7 @@ export default function NoteCard({ note, onEdit, onDelete, onView }: NoteCardPro
       </div>
       
       <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-  {truncateText(note.texto, 150)}
+  {truncateText(note.contenido, 150)}
 </p>
       
       <div className="flex justify-between items-center text-xs text-gray-500">

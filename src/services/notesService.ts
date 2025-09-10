@@ -4,6 +4,7 @@ import API from "./api";
 export interface Note {
   id: string;
   titulo: string;
+  texto: string;
   contenido: string;
   usuario_id: string;
   fecha_creacion: string;
