@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { authService } from '../../services';
+import { useForm, useAuth } from '../../hooks';
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -7,35 +6,29 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
-  const [formData, setFormData] = useState({
-    email: '',
-    passwordd: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      await authService.login(formData);
-      onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
-    } finally {
-      setIsLoading(false);
+  const { login } = useAuth();
+  
+  const {
+    data: formData,
+    errors,
+    isLoading,
+    handleChange,
+    handleSubmit,
+    setErrors
+  } = useForm({
+    initialData: {
+      email: '',
+      passwordd: ''
+    },
+    onSubmit: async (data) => {
+      try {
+        await login(data);
+        onSuccess();
+      } catch (err: any) {
+        setErrors({ general: err.message || 'Error al iniciar sesión' });
+      }
     }
-  };
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -83,9 +76,9 @@ export default function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormPr
             </div>
           </div>
 
-          {error && (
+          {errors.general && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-              {error}
+              {errors.general}
             </div>
           )}
 

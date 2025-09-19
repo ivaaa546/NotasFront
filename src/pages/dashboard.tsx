@@ -1,37 +1,15 @@
-import { useState, useEffect } from 'react';
-import { authService, notesService, type Note } from '../services';
+import { useEffect } from 'react';
+import { useAuth, useNotes } from '../hooks';
 import Navbar from '../components/layout/navbar';
 import NotesGrid from '../components/notes/notes-grid';
 
 export default function Dashboard() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
+  const { notes, isLoading, error, loadNotes } = useNotes();
 
   useEffect(() => {
-    // Obtener usuario actual
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-
-    // Cargar notas
     loadNotes();
-  }, []);
-
-  const loadNotes = async () => {
-    try {
-      setIsLoading(true);
-      const userNotes = await notesService.getAllNotes();
-      console.log("Notes loaded:", userNotes);
-      // Asegurar que userNotes sea un array
-      setNotes(Array.isArray(userNotes) ? userNotes : []);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar las notas');
-      setNotes([]); // Asegurar que notes sea un array vacío en caso de error
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [loadNotes]);
 
   const handleNotesChange = () => {
     loadNotes();

@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { authService } from '../../services';
+import { useForm, useAuth } from '../../hooks';
 
 interface RegisterFormProps {
   onSuccess: () => void;
@@ -7,54 +6,48 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) {
-  const [formData, setFormData] = useState({
-    nombre: '',
-    email: '',
-    passwordd: '',
-    confirmPassword: ''
+  const { register } = useAuth();
+  
+  const {
+    data: formData,
+    errors,
+    isLoading,
+    handleChange,
+    handleSubmit,
+    setErrors
+  } = useForm({
+    initialData: {
+      nombre: '',
+      email: '',
+      passwordd: '',
+      confirmPassword: ''
+    },
+    validate: (data) => {
+      const errors: Record<string, string> = {};
+      
+      if (data.passwordd !== data.confirmPassword) {
+        errors.confirmPassword = 'Las contraseñas no coinciden';
+      }
+      
+      if (data.passwordd.length < 6) {
+        errors.passwordd = 'La contraseña debe tener al menos 6 caracteres';
+      }
+      
+      return errors;
+    },
+    onSubmit: async (data) => {
+      try {
+        await register({
+          nombre: data.nombre,
+          email: data.email,
+          passwordd: data.passwordd
+        });
+        onSuccess();
+      } catch (err: any) {
+        setErrors({ general: err.message || 'Error al registrar usuario' });
+      }
+    }
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    // Validaciones básicas
-    if (formData.passwordd !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      setIsLoading(false);
-      return;
-    }
-
-    if (formData.passwordd.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      await authService.register({
-        nombre: formData.nombre,
-        email: formData.email,
-        passwordd: formData.passwordd
-      });
-      onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Error al registrar usuario');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -132,9 +125,9 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFor
             </div>
           </div>
 
-          {error && (
+          {errors.general && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
-              {error}
+              {errors.general}
             </div>
           )}
 
